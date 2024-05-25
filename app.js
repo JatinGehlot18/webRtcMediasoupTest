@@ -10,7 +10,6 @@ const app = express()
 import https from 'httpolyglot'
 import * as http from 'http';
 import * as dotenv from 'dotenv';
-import { exec } from 'child_process';
 dotenv.config();
 import path from 'path'
 const __dirname = path.resolve()
@@ -36,31 +35,7 @@ httpServer.listen(process.env.PORT, () => {
 const io = new Server(httpServer)
 
 // socket.io namespace (could represent a room?)
-const connections = io.of('/mediasoup');
-function runIpconfig() {
-  return new Promise((resolve, reject) => {
-    exec('ipconfig', (error, stdout, stderr) => {
-      if (error) {
-        reject(`Error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        reject(`Stderr: ${stderr}`);
-        return;
-      }
-      resolve(stdout);
-    });
-  });
-}
-
-// Example usage:
-runIpconfig()
-  .then(output => {
-    console.log(output);
-  })
-  .catch(error => {
-    console.error(error);
-  });
+const connections = io.of('/mediasoup')
 
 /**
  * Worker
