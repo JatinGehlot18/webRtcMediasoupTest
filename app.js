@@ -425,6 +425,7 @@ const createWebRtcTransport = async (router) => {
         listenIps: [
           {
             ip: process.env.IP, // replace with relevant IP address
+            announcedIp: process.env.ANNOUNCED_IP
           }
         ],
         enableUdp: true,
