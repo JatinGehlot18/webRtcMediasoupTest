@@ -28,7 +28,7 @@ app.get('*', (req, res, next) => {
 app.use('/sfu/:room', express.static(path.join(__dirname, 'public')));
 
 const httpServer = http.createServer(app)
-httpServer.listen(process.env.PORT, () => {
+httpServer.listen(process.env.PORT,() => {
   console.log('listening on port: ' + process.env.PORT)
 })
 
@@ -422,11 +422,24 @@ const createWebRtcTransport = async (router) => {
     try {
       // https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
       const webRtcTransport_options = {
-        listenIps: [
+        // listenIps: [
+        //   {
+        //     ip: process.env.IP, // replace with relevant IP address
+        //     announcedIp: process.env.ANNOUNCED_IP
+        //   }
+        // ],
+        listenInfos :
+        [
           {
-            ip: process.env.IP, // replace with relevant IP address
-            announcedIp: process.env.ANNOUNCED_IP
-          }
+            protocol         : "udp", 
+            ip               : process.env.IP, 
+            announcedAddress : process.env.ANNOUNCED_IP
+          },
+          {
+            protocol         : "tcp", 
+            ip               : process.env.IP, 
+            announcedAddress : process.env.ANNOUNCED_IP
+          },
         ],
         enableUdp: true,
         enableTcp: true,
