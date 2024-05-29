@@ -11,6 +11,7 @@ import https from 'httpolyglot'
 import * as http from 'http';
 import * as dotenv from 'dotenv';
 dotenv.config();
+import fs from 'fs'
 import path from 'path'
 const __dirname = path.resolve()
 
@@ -27,12 +28,19 @@ app.get('*', (req, res, next) => {
 
 app.use('/sfu/:room', express.static(path.join(__dirname, 'public')));
 
-const httpServer = http.createServer(app)
-httpServer.listen(process.env.PORT,() => {
+// SSL cert for HTTPS access
+const options = {
+  key: fs.readFileSync('./server/ssl/key.pem', 'utf-8'),
+  cert: fs.readFileSync('./server/ssl/cert.pem', 'utf-8')
+}
+
+const httpsServer = https.createServer(options, app)
+httpsServer.listen(process.env.PORT, () => {
   console.log('listening on port: ' + process.env.PORT)
 })
 
-const io = new Server(httpServer)
+
+const io = new Server(httpsServer)
 
 // socket.io namespace (could represent a room?)
 const connections = io.of('/mediasoup')
@@ -55,7 +63,7 @@ let consumers = []      // [ { socketId1, roomName1, consumer, }, ... ]
 const createWorker = async () => {
   worker = await mediasoup.createWorker({
     rtcMinPort: 2000,
-    rtcMaxPort: 2020,
+    rtcMaxPort: 2010,
   })
   console.log(`worker pid ${worker.pid}`)
 
@@ -164,7 +172,7 @@ connections.on('connection', async socket => {
     } else {
       router1 = await worker.createRouter({ mediaCodecs, })
     }
-    
+
     console.log(`Router ID: ${router1.id}`, peers.length)
 
     rooms[roomName] = {
@@ -308,7 +316,7 @@ connections.on('connection', async socket => {
   // see client's socket.emit('transport-connect', ...)
   socket.on('transport-connect', ({ dtlsParameters }) => {
     console.log('DTLS PARAMS... ', { dtlsParameters })
-    
+
     getTransport(socket.id).connect({ dtlsParameters })
   })
 
@@ -337,7 +345,7 @@ connections.on('connection', async socket => {
     // Send back to the client the Producer's id
     callback({
       id: producer.id,
-      producersExist: producers.length>1 ? true : false
+      producersExist: producers.length > 1 ? true : false
     })
   })
 
@@ -424,23 +432,23 @@ const createWebRtcTransport = async (router) => {
       const webRtcTransport_options = {
         // listenIps: [
         //   {
-        //     ip: process.env.IP, // replace with relevant IP address
+        //     ip: process.env.ANNOUNCED_IP, // replace with relevant IP address
         //     announcedIp: process.env.ANNOUNCED_IP
         //   }
         // ],
-        listenInfos :
-        [
-          {
-            protocol         : "udp", 
-            ip               : process.env.IP, 
-            announcedAddress : process.env.ANNOUNCED_IP
-          },
-          {
-            protocol         : "tcp", 
-            ip               : process.env.IP, 
-            announcedAddress : process.env.ANNOUNCED_IP
-          },
-        ],
+        listenInfos:
+          [
+            {
+              protocol: "udp",
+              ip: process.env.IP,
+              announcedAddress: process.env.ANNOUNCED_IP
+            },
+            {
+              protocol: "tcp",
+              ip: process.env.IP,
+              announcedAddress: process.env.ANNOUNCED_IP
+            },
+          ],
         enableUdp: true,
         enableTcp: true,
         preferUdp: true,
